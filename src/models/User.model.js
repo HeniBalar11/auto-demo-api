@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

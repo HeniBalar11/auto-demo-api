@@ -18,6 +18,7 @@ exports.register = async (req, res) => {
     // 2️⃣ Check existing user
     const existingUser = await User.findOne({
       $or: [{ email }, { phoneNumber }],
+      isDeleted: false,
     });
 
     if (existingUser) {
@@ -71,7 +72,7 @@ exports.login = async (req, res) => {
     }
 
     // 2️⃣ Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, isDeleted: false });
     if (!user) {
       return res.status(401).json({
         success: false,

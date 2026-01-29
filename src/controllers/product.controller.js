@@ -8,7 +8,7 @@ exports.createProduct = async (req, res) => {
     console.log("req.body:", req.body);
 
     // const files = req?.files?.length > 0;
-    const { name, details, price, category, material, media } = req.body;
+    const { name, details, price, category, material } = req.body;
 
     if (!name || !details || !price) {
       return res.status(400).json({
@@ -17,12 +17,14 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    // const media = req.files.map((file) => ({
-    //   url: file.path,
-    //   type: getMediaType(file.path),
-    // }));
+    const media =
+      req.files?.media?.length > 0
+        ? req.files.media.map((file) => ({
+            url: file.path,
+            type: getMediaType(file.path),
+          }))
+        : [];
 
-    // console.log("Media:", media);
     const product = await Product.create({
       name,
       details,
@@ -52,10 +54,9 @@ exports.createProduct = async (req, res) => {
  */
 exports.getAllProducts = async (_req, res) => {
   try {
-    const products = await Product.find().populate(
-      "createdBy",
-      "name email phoneNumber",
-    );
+    const products = await Product.find({ isDeleted: false })
+      .populate("createdBy", "name email phoneNumber")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -78,6 +79,7 @@ exports.updateProduct = async (req, res) => {
     const product = await Product.findOne({
       _id: req.params.id,
       createdBy: req.user.id,
+      isDeleted: false,
     });
 
     if (!product) {
@@ -87,15 +89,29 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    if (req.files && req.files.length > 0) {
-      const newMedia = req.files.map((file) => ({
+    if (req.files?.media?.length > 0) {
+      const newMedia = req.files.media.map((file) => ({
         url: file.path,
         type: getMediaType(file.path),
       }));
+
+      if (product.media.length + newMedia.length > 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Maximum 10 media files allowed per product",
+        });
+      }
+
       product.media.push(...newMedia);
     }
 
-    Object.assign(product, req.body);
+    const allowedUpdates = ["name", "details", "price", "category", "material"];
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
     await product.save();
 
     return res.status(200).json({
@@ -104,21 +120,22 @@ exports.updateProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
+    console.error("Update product error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",
     });
   }
 };
-
 /**
  * MAKER ➜ Delete own product
  */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findOneAndDelete({
+    const product = await Product.findOne({
       _id: req.params.id,
       createdBy: req.user.id,
+      isDeleted: false,
     });
 
     if (!product) {
@@ -127,6 +144,9 @@ exports.deleteProduct = async (req, res) => {
         message: "Product not found or not authorized",
       });
     }
+
+    product.isDeleted = true;
+    await product.save();
 
     return res.status(200).json({
       success: true,
@@ -148,6 +168,7 @@ exports.getByIdProduct = async (req, res) => {
     const product = await Product.findOne({
       _id: req.params.id,
       createdBy: req.user.id,
+      isDeleted: false,
     });
 
     if (!product) {

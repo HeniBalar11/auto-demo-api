@@ -15,14 +15,10 @@ const productSchema = new mongoose.Schema(
 
     media: [
       {
-        url: {
-          type: String,
-          required: true,
-        },
+        url: String,
         type: {
           type: String,
           enum: ["image", "video"],
-          required: true,
         },
       },
     ],
@@ -46,6 +42,11 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true, // maker id
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },
