@@ -95,10 +95,10 @@ exports.updateProduct = async (req, res) => {
         type: getMediaType(file.path),
       }));
 
-      if (product.media.length + newMedia.length > 10) {
+      if (product.media.length + newMedia.length > 11) {
         return res.status(400).json({
           success: false,
-          message: "Maximum 10 media files allowed per product",
+          message: "Maximum 11 media files allowed per product",
         });
       }
 

@@ -25,7 +25,7 @@ router.put(
   isMaker,
   productController.updateProduct,
 );
-router.get("/:id", authController, isMaker, productController.getByIdProduct);
+router.get("/:id", authController, productController.getByIdProduct);
 router.delete("/:id", authController, isMaker, productController.deleteProduct);
 
 module.exports = router;

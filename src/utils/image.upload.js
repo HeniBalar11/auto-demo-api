@@ -41,7 +41,7 @@ exports.upload = imageUpload.fields([
   // user
   { name: "image", maxCount: 1 },
   //product
-  { name: "media", maxCount: 10 },
+  { name: "media", maxCount: 11 },
 ]);
 // Remove file from disk
 // exports.removeFile = promisify(fs.unlink)
