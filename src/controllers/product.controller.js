@@ -167,14 +167,13 @@ exports.getByIdProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
       _id: req.params.id,
-      createdBy: req.user.id,
       isDeleted: false,
     });
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found or not authorized",
+        message: "Product not found",
       });
     }
     return res.status(200).json({
