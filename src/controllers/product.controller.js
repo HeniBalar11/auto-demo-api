@@ -1,5 +1,7 @@
 const Product = require("../models/Product.model");
 const { getMediaType } = require("../utils/image.upload");
+const path = require("path");
+const fs = require("fs");
 /**
  * MAKER ➜ Add Product
  */
@@ -86,6 +88,23 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Product not found or not authorized",
+      });
+    }
+
+    if (req.body.removedImg?.length) {
+      const removedIds = Array.isArray(req.body.removedImg)
+        ? req.body.removedImg
+        : JSON.parse(req.body.removedImg);
+
+      product.media = product.media.filter((media) => {
+        if (removedIds.includes(media._id.toString())) {
+          const filePath = path.join(process.cwd(), media.url);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+          return false; // remove from array
+        }
+        return true;
       });
     }
 
