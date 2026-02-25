@@ -17,6 +17,7 @@ app.use("/api/auth", require("./src/routes/auth.routes"));
 app.use("/api/product", require("./src/routes/product.routes"));
 app.use("/api/custom-request", require("./src/routes/customRequest.routes"));
 app.use("/api/bids", require("./src/routes/bid.routes"));
+app.use("/api/categories", require("./src/routes/category.routes"));
 
 // 🩺 Health check
 app.get("/", (req, res) => {

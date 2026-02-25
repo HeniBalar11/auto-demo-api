@@ -38,7 +38,7 @@ exports.placeBid = async (req, res) => {
       message,
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: "Bid placed successfully",
       data: bid,

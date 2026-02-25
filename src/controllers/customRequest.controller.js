@@ -37,7 +37,7 @@ exports.createRequest = async (req, res) => {
       referenceImages,
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: "Custom request created successfully",
       data: newRequest,
