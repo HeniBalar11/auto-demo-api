@@ -28,10 +28,16 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    category: {
-      type: String,
-      enum: ["ring", "necklace", "bracelet", "earring", "other"],
-      default: "other",
+    // category: {
+    //   type: String,
+    //   enum: ["ring", "necklace", "bracelet", "earring", "other"],
+    //   default: "other",
+    // },
+
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
 
     material: {

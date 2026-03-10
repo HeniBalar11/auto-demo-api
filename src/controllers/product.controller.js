@@ -1,4 +1,5 @@
 const Product = require("../models/Product.model");
+const Category = require("../models/Category.model");
 const { getMediaType } = require("../utils/image.upload");
 const path = require("path");
 const fs = require("fs");
@@ -10,12 +11,23 @@ exports.createProduct = async (req, res) => {
     console.log("req.body:", req.body);
 
     // const files = req?.files?.length > 0;
-    const { name, details, price, category, material } = req.body;
+    const { name, details, price, categoryId, material } = req.body;
 
     if (!name || !details || !price) {
       return res.status(400).json({
         success: false,
         message: "Required fields missing",
+      });
+    }
+
+    const category = await Category.findOne({
+      _id: categoryId,
+      isActive: true,
+    });
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
       });
     }
 
@@ -32,7 +44,7 @@ exports.createProduct = async (req, res) => {
       details,
       media,
       price,
-      category,
+      categoryId,
       material,
       createdBy: req.user.id,
     });
@@ -58,6 +70,7 @@ exports.getAllProducts = async (_req, res) => {
   try {
     const products = await Product.find({ isDeleted: false })
       .populate("createdBy", "name email phoneNumber")
+      .populate("categoryId", "name")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -187,7 +200,7 @@ exports.getByIdProduct = async (req, res) => {
     const product = await Product.findOne({
       _id: req.params.id,
       isDeleted: false,
-    });
+    }).populate("categoryId", "name");
 
     if (!product) {
       return res.status(404).json({
