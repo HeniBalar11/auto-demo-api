@@ -51,6 +51,121 @@ exports.createRequest = async (req, res) => {
   }
 };
 
+exports.getRequestById = async (req, res) => {
+  try {
+    const request = await CustomRequest.findOne({
+      _id: req.params.id,
+      customerId: req.user.id,
+      // isDeleted: false,
+    });
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: request,
+    });
+  } catch (error) {
+    console.error("Get Request Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+exports.updateRequest = async (req, res) => {
+  try {
+    const { title, description, budgetMin, budgetMax, deadline } = req.body;
+
+    const request = await CustomRequest.findOne({
+      _id: req.params.id,
+      customerId: req.user.id,
+      // isDeleted: false,
+    });
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    if (budgetMin && budgetMax && Number(budgetMin) > Number(budgetMax)) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum budget cannot be greater than maximum budget",
+      });
+    }
+
+    // upload new images
+    let newImages = [];
+    if (req.files?.media?.length > 0) {
+      newImages = req.files.media.map((file) => file.path);
+    }
+
+    request.title = title || request.title;
+    request.description = description || request.description;
+    request.budgetMin = budgetMin || request.budgetMin;
+    request.budgetMax = budgetMax || request.budgetMax;
+    request.deadline = deadline || request.deadline;
+
+    if (newImages.length > 0) {
+      request.referenceImages = [...request.referenceImages, ...newImages];
+    }
+
+    await request.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Request updated successfully",
+      data: request,
+    });
+  } catch (error) {
+    console.error("Update Request Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+exports.deleteRequest = async (req, res) => {
+  try {
+    const request = await CustomRequest.findOne({
+      _id: req.params.id,
+      customerId: req.user.id,
+      // isDeleted: false,
+    });
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    request.isDeleted = true;
+    await request.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Request deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete Request Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 /**
  * MAKER ➜ Get all open requests
  */
