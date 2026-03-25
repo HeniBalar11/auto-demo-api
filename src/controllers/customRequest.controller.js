@@ -55,7 +55,7 @@ exports.getRequestById = async (req, res) => {
   try {
     const request = await CustomRequest.findOne({
       _id: req.params.id,
-      customerId: req.user.id,
+      // customerId: req.user.id,
       // isDeleted: false,
     });
 
