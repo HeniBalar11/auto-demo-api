@@ -67,7 +67,7 @@ exports.getBidsByRequest = async (req, res) => {
     }
 
     const bids = await Bid.find({ requestId: req.params.requestId })
-      .populate("makerId", "name email")
+      .populate("makerId", "name email rating")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({

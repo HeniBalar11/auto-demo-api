@@ -49,6 +49,7 @@ exports.register = async (req, res) => {
         email: user.email,
         phoneNumber: user.phoneNumber,
         role: user.role,
+        rating: user.rating || 0,
       },
     });
   } catch (error) {
