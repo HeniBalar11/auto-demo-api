@@ -34,6 +34,23 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
     },
 
+    // 👤 Profile
+    profileImage: {
+      type: String,
+      default: null,
+    },
+
+    // 🔑 OTP for forgot password
+    resetOtp: {
+      type: String,
+      default: null,
+    },
+
+    resetOtpExpiry: {
+      type: Date,
+      default: null,
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
