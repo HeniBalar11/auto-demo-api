@@ -21,3 +21,6 @@ router.get("/:categoryId/subcategories", categoryController.getSubCategories);
 router.get("/with-sub", categoryController.getCategoriesWithSubCategories);
 
 module.exports = router;
+
+// 🔥 Get attribute schema for a subcategory (for Flutter product-add form)
+router.get("/subcategory/:subCategoryId/attributes", categoryController.getSubCategoryAttributes);

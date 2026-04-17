@@ -21,6 +21,8 @@ app.use("/api/product", require("./src/routes/product.routes"));
 app.use("/api/custom-request", require("./src/routes/customRequest.routes"));
 app.use("/api/bids", require("./src/routes/bid.routes"));
 app.use("/api/categories", require("./src/routes/category.routes"));
+app.use("/api/cart", require("./src/routes/cart.routes"));
+app.use("/api/wishlist", require("./src/routes/wishlist.routes"));
 app.use("/api/chat", require("./src/routes/chat.routes"));
 
 // 🩺 Health check
