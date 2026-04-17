@@ -151,3 +151,29 @@ exports.getCategoriesWithSubCategories = async (req, res) => {
     });
   }
 };
+
+/**
+ * 🔥 GET ATTRIBUTES SCHEMA FOR A SUBCATEGORY
+ * GET /api/categories/subcategory/:subCategoryId/attributes
+ * Flutter uses this to dynamically build the product-add form
+ */
+exports.getSubCategoryAttributes = async (req, res) => {
+  try {
+    const subCategory = await SubCategory.findById(req.params.subCategoryId);
+
+    if (!subCategory) {
+      return res.status(404).json({ success: false, message: "SubCategory not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        category: subCategory.name,
+        personalisationAllowed: subCategory.personalisationAllowed,
+        details: subCategory.attributeSchema,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};

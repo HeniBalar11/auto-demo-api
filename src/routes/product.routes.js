@@ -1,31 +1,19 @@
+// routes/product.routes.js
 const express = require("express");
 const router = express.Router();
-
-const authController = require("../middlewares/auth.middleware");
+const auth = require("../middlewares/auth.middleware");
 const { isMaker } = require("../middlewares/role.middleware");
 const { upload } = require("../utils/image.upload");
-
 const productController = require("../controllers/product.controller");
 
-// CUSTOMER + MAKER
+// 🔓 Public
 router.get("/", productController.getAllProducts);
+router.get("/:id", productController.getByIdProduct);
 
-// MAKER only
-router.post(
-  "/",
-  upload,
-  authController,
-  isMaker,
-  productController.createProduct,
-);
-router.put(
-  "/:id",
-  upload,
-  authController,
-  isMaker,
-  productController.updateProduct,
-);
-router.get("/:id", authController, productController.getByIdProduct);
-router.delete("/:id", authController, isMaker, productController.deleteProduct);
+// 🔒 Maker only
+router.get("/my/listings", auth, isMaker, productController.getMyProducts);
+router.post("/", upload, auth, isMaker, productController.createProduct);
+router.put("/:id", upload, auth, isMaker, productController.updateProduct);
+router.delete("/:id", auth, isMaker, productController.deleteProduct);
 
 module.exports = router;
