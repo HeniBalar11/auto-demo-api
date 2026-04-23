@@ -110,7 +110,7 @@ exports.getCategoriesWithSubCategories = async (req, res) => {
   try {
     const categories = await Category.aggregate([
       {
-        $match: { isActive: true }, // ✅ Only active categories
+        $match: { isActive: true },
       },
       {
         $lookup: {
@@ -120,21 +120,24 @@ exports.getCategoriesWithSubCategories = async (req, res) => {
             {
               $match: {
                 $expr: { $eq: ["$categoryId", "$$categoryId"] },
-                isActive: true, // ✅ Only active subcategories
+                isActive: true,
               },
             },
             {
-              $project: { name: 1, _id: 0 },
+              $project: {
+                _id: 1,
+                name: 1,
+              },
             },
           ],
-          as: "subCategoriesData",
+          as: "subCategories",
         },
       },
       {
         $project: {
           image: 1,
           category: "$name",
-          subCategories: "$subCategoriesData.name",
+          subCategories: 1, // now contains array of {_id, name}
         },
       },
     ]);
@@ -162,7 +165,9 @@ exports.getSubCategoryAttributes = async (req, res) => {
     const subCategory = await SubCategory.findById(req.params.subCategoryId);
 
     if (!subCategory) {
-      return res.status(404).json({ success: false, message: "SubCategory not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "SubCategory not found" });
     }
 
     return res.status(200).json({
