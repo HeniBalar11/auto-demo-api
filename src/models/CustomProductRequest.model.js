@@ -1,6 +1,8 @@
+// models/CustomProductRequest.model.js
 const mongoose = require("mongoose");
 
 const customRequestSchema = new mongoose.Schema(
+
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -38,6 +40,18 @@ const customRequestSchema = new mongoose.Schema(
     deadline: {
       type: Date,
     },
+
+    // ─────────────────────────────────────────
+    // 3️⃣ VARIATIONS — Customer's preferred options
+    // e.g. [{ name: "Ring Size", selectedValue: "7" },
+    //        { name: "Metal Color", selectedValue: "Rose Gold" }]
+    // ─────────────────────────────────────────
+    variations: [
+      {
+        name: { type: String, trim: true },           // variation label, e.g. "Ring Size"
+        selectedValue: { type: String, trim: true },  // chosen option, e.g. "7"
+      },
+    ],
 
     status: {
       type: String,

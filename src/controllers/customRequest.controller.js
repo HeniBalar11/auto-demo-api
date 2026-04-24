@@ -1,3 +1,4 @@
+// controllers/customRequest.controller.js
 const CustomRequest = require("../models/CustomProductRequest.model");
 
 /**
@@ -5,7 +6,7 @@ const CustomRequest = require("../models/CustomProductRequest.model");
  */
 exports.createRequest = async (req, res) => {
   try {
-    const { title, description, budgetMin, budgetMax, deadline } = req.body;
+    const { title, description, budgetMin, budgetMax, deadline, variations } = req.body;
 
     if (!title || !description || !budgetMin || !budgetMax) {
       return res.status(400).json({
@@ -27,6 +28,11 @@ exports.createRequest = async (req, res) => {
         ? req.files.media.map((file) => file.path)
         : [];
 
+    // Parse variations if sent as JSON string (form-data)
+    const parsedVariations = variations
+      ? typeof variations === "string" ? JSON.parse(variations) : variations
+      : [];
+
     const newRequest = await CustomRequest.create({
       customerId: req.user.id,
       title,
@@ -35,6 +41,7 @@ exports.createRequest = async (req, res) => {
       budgetMax,
       deadline,
       referenceImages,
+      variations: parsedVariations,
     });
 
     return res.status(200).json({
@@ -81,7 +88,7 @@ exports.getRequestById = async (req, res) => {
 
 exports.updateRequest = async (req, res) => {
   try {
-    const { title, description, budgetMin, budgetMax, deadline } = req.body;
+    const { title, description, budgetMin, budgetMax, deadline, variations } = req.body;
 
     const request = await CustomRequest.findOne({
       _id: req.params.id,
@@ -115,7 +122,14 @@ exports.updateRequest = async (req, res) => {
     request.budgetMax = budgetMax || request.budgetMax;
     request.deadline = deadline || request.deadline;
 
+    // Update variations if provided
+    if (variations !== undefined) {
+      request.variations =
+        typeof variations === "string" ? JSON.parse(variations) : variations;
+    }
+
     if (newImages.length > 0) {
+
       request.referenceImages = [...request.referenceImages, ...newImages];
     }
 

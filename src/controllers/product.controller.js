@@ -30,6 +30,8 @@ exports.createProduct = async (req, res) => {
       internationalPrice, internationalDays, internationalAvailable,
       // SETTINGS
       returnsAccepted, exchangeAccepted, cancellationAllowed, status,
+      // PRODUCT INFORMATION (Etsy-style)
+      whoCreated, itemType, itemProduced,
     } = req.body;
 
     // Validate required fields
@@ -50,9 +52,9 @@ exports.createProduct = async (req, res) => {
     const media =
       req.files?.media?.length > 0
         ? req.files.media.map((file) => ({
-            url: file.path,
-            type: getMediaType(file.path),
-          }))
+          url: file.path,
+          type: getMediaType(file.path),
+        }))
         : [];
 
     // Parse JSON strings if sent from form-data
@@ -122,6 +124,11 @@ exports.createProduct = async (req, res) => {
         exchangeAccepted: exchangeAccepted === "true" || exchangeAccepted === true,
         cancellationAllowed: cancellationAllowed !== "false",
         status: status || "active",
+      },
+      productInfo: {
+        whoCreated: whoCreated || "I created it",
+        itemType: itemType || "Finished product",
+        itemProduced: itemProduced || "Made to order",
       },
       createdBy: req.user.id,
     });
@@ -268,6 +275,10 @@ exports.updateProduct = async (req, res) => {
     if (b.attributes) product.details.attributes = typeof b.attributes === "string" ? JSON.parse(b.attributes) : b.attributes;
     if (b.status) product.settings.status = b.status;
     if (b.returnsAccepted !== undefined) product.settings.returnsAccepted = b.returnsAccepted !== "false";
+    // PRODUCT INFORMATION
+    if (b.whoCreated) product.productInfo.whoCreated = b.whoCreated;
+    if (b.itemType) product.productInfo.itemType = b.itemType;
+    if (b.itemProduced) product.productInfo.itemProduced = b.itemProduced;
 
     await product.save();
 

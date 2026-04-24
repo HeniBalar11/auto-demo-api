@@ -121,6 +121,36 @@ const productSchema = new mongoose.Schema(
     },
 
     // ─────────────────────────────────────────
+    // 📋 PRODUCT INFORMATION (Etsy-style)
+    // ─────────────────────────────────────────
+    productInfo: {
+      // "Who created this item?"
+      whoCreated: {
+        type: String,
+        enum: ["I created it", "A team member created it"],
+        default: "I created it",
+      },
+      // "What type of item is this?"
+      itemType: {
+        type: String,
+        enum: ["Finished product", "Supply or material"],
+        default: "Finished product",
+      },
+      // "When was this item produced?"
+      itemProduced: {
+        type: String,
+        enum: [
+          "Made to order",
+          "2022 - 2026",
+          "2010 - 2021",
+          "2000 - 2009",
+          "Vintage (20+ years old)",
+        ],
+        default: "Made to order",
+      },
+    },
+
+    // ─────────────────────────────────────────
     // META
     // ─────────────────────────────────────────
     createdBy: {
