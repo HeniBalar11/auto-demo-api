@@ -22,7 +22,7 @@ const imageUpload = multer({
   fileFilter(_req, file, cb) {
     if (
       !file.originalname.match(
-        /\.(png|jpg|jpeg|gif|pdf|JPG|JPEG|PNG|HEIF|mp4|mov|mkv|webm)$/,
+        /\.(png|jpg|jpeg|gif|pdf|webp|JPG|JPEG|PNG|WEBP|HEIF|mp4|mov|mkv|webm)$/,
       )
     ) {
       // upload only png and jpg format
@@ -54,7 +54,7 @@ exports.removeFile = (path) =>
 exports.getMediaType = (filePath) => {
   const ext = path.extname(filePath).toLowerCase();
 
-  if ([".png", ".jpg", ".jpeg", ".gif"].includes(ext)) return "image";
+  if ([".png", ".jpg", ".jpeg", ".gif", ".webp"].includes(ext)) return "image";
   if ([".mp4", ".mov", ".mkv", ".webm"].includes(ext)) return "video";
 
   return null;
