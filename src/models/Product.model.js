@@ -128,13 +128,13 @@ const productSchema = new mongoose.Schema(
       whoCreated: {
         type: String,
         enum: ["I created it", "A team member created it"],
-        default: "I created it",
+        // default: "I created it",
       },
       // "What type of item is this?"
       itemType: {
         type: String,
         enum: ["Finished product", "Supply or material"],
-        default: "Finished product",
+        // default: "Finished product",
       },
       // "When was this item produced?"
       itemProduced: {
@@ -146,7 +146,7 @@ const productSchema = new mongoose.Schema(
           "2000 - 2009",
           "Vintage (20+ years old)",
         ],
-        default: "Made to order",
+        // default: "Made to order",
       },
     },
 
