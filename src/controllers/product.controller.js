@@ -126,10 +126,10 @@ exports.createProduct = async (req, res) => {
         status: status || "active",
       },
       productInfo: {
-          whoCreated: req.body.whoCreated || "",
-          itemType: req.body.itemType || "",
-          itemProduced: req.body.itemProduced || "",
-        },
+        ...(whoCreated !== undefined && { whoCreated }),
+        ...(itemType !== undefined && { itemType }),
+        ...(itemProduced !== undefined && { itemProduced }),
+      },
       createdBy: req.user.id,
     });
 
