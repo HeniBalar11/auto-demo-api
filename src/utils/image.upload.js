@@ -19,6 +19,10 @@ const imageStorage = multer.diskStorage({
 
 const imageUpload = multer({
   storage: imageStorage,
+  limits: {
+    fields: 50,              // ✅ default is 20 — Flutter sends 30+ fields
+    fileSize: 20 * 1024 * 1024, // 20 MB per file
+  },
   fileFilter(_req, file, cb) {
     if (
       !file.originalname.match(
