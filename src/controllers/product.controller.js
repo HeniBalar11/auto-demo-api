@@ -133,12 +133,10 @@ exports.createProduct = async (req, res) => {
       createdBy: req.user.id,
     });
 
-    const savedProduct = await Product.findById(product._id).lean();
-
     return res.status(200).json({
       success: true,
       message: "Product added successfully",
-      data: savedProduct,
+      data: product,
     });
   } catch (error) {
     console.error("createProduct error:", error);
