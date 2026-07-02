@@ -20,14 +20,24 @@ const setupSocket = (io) => {
     }
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     console.log(`✅ Socket connected: ${socket.user.id}`);
 
+    // Auto-join all rooms so user gets live messages in inbox
+    try {
+      const rooms = await ChatRoom.find({ participants: socket.user.id });
+      rooms.forEach((room) => socket.join(room.chatRoomId));
+      console.log(`👤 User ${socket.user.id} joined ${rooms.length} room(s)`);
+    } catch (err) {
+      console.error("Auto-join rooms error:", err);
+    }
+
     // ─────────────────────────────────────────
-    // 📥 JOIN A CHAT ROOM
+    // 📥 JOIN A CHAT ROOM (optional — for new rooms)
     // Client emits: joinRoom with { chatRoomId }
     // ─────────────────────────────────────────
     socket.on("joinRoom", ({ chatRoomId }) => {
+      if (!chatRoomId) return;
       socket.join(chatRoomId);
       console.log(`👤 User ${socket.user.id} joined room: ${chatRoomId}`);
     });
@@ -41,7 +51,9 @@ const setupSocket = (io) => {
         const { chatRoomId, receiverId, message, image } = data;
 
         if (!chatRoomId || !receiverId || !message) {
-          socket.emit("error", { message: "chatRoomId, receiverId and message are required" });
+          socket.emit("error", {
+            message: "chatRoomId, receiverId and message are required",
+          });
           return;
         }
 
@@ -57,17 +69,19 @@ const setupSocket = (io) => {
         // Update room's last message
         await ChatRoom.findOneAndUpdate(
           { chatRoomId },
-          { lastMessage: message, lastMessageAt: new Date() }
+          { lastMessage: message, lastMessageAt: new Date() },
         );
 
-        const populated = await newMessage.populate("senderId", "name profileImage");
+        const populated = await newMessage.populate(
+          "senderId",
+          "name profileImage",
+        );
 
         // 📡 Broadcast to everyone in the room (including sender)
         io.to(chatRoomId).emit("newMessage", {
           success: true,
           data: populated,
         });
-
       } catch (error) {
         console.error("Socket sendMessage error:", error);
         socket.emit("error", { message: "Failed to send message" });

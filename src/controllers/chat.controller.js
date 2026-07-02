@@ -107,7 +107,7 @@ exports.getMessages = async (req, res) => {
     // Mark all unread messages as read
     await Message.updateMany(
       { chatRoomId, receiverId: req.user.id, isRead: false },
-      { isRead: true }
+      { isRead: true },
     );
 
     return res.status(200).json({
@@ -138,8 +138,7 @@ exports.sendMessage = async (req, res) => {
     }
 
     // Handle optional image upload
-    const image =
-      req.files?.media?.length ? req.files.media[0].path : null;
+    const image = req.files?.media?.length ? req.files.media[0].path : null;
 
     const newMessage = await Message.create({
       chatRoomId,
@@ -152,10 +151,21 @@ exports.sendMessage = async (req, res) => {
     // Update room's last message
     await ChatRoom.findOneAndUpdate(
       { chatRoomId },
-      { lastMessage: message, lastMessageAt: new Date() }
+      { lastMessage: message, lastMessageAt: new Date() },
     );
 
-    const populated = await newMessage.populate("senderId", "name profileImage");
+    const populated = await newMessage.populate(
+      "senderId",
+      "name profileImage",
+    );
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(chatRoomId).emit("newMessage", {
+        success: true,
+        data: populated,
+      });
+    }
 
     return res.status(200).json({
       success: true,
