@@ -27,6 +27,7 @@ app.use("/api/chat", require("./src/routes/chat.routes"));
 
 // 🩺 Health check
 app.get("/", (req, res) => {
+  console.log("🚀 Auth API running successfully");
   res.send("🚀 Auth API running successfully");
 });
 
