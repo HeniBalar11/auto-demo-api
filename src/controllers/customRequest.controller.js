@@ -186,7 +186,7 @@ exports.deleteRequest = async (req, res) => {
 exports.getAllOpenRequests = async (req, res) => {
   try {
     const requests = await CustomRequest.find({ status: "open" })
-      .populate("customerId", "name email")
+      .populate("customerId", " _id name email")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
