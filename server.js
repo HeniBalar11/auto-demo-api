@@ -27,6 +27,7 @@ app.use("/api/categories", require("./src/routes/category.routes"));
 app.use("/api/cart", require("./src/routes/cart.routes"));
 app.use("/api/wishlist", require("./src/routes/wishlist.routes"));
 app.use("/api/chat", require("./src/routes/chat.routes"));
+app.use("/api/payment", require("./src/routes/payment.routes"));
 
 // 🩺 Health check
 app.get("/", (req, res) => {
