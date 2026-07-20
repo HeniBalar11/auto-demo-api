@@ -184,5 +184,43 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// 5️⃣ UPLOAD CHAT MEDIA (Images, PDFs, Audio)
+// POST /api/chat/upload
+// 🔒 Protected
+// ─────────────────────────────────────────────
+exports.uploadMedia = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No files uploaded",
+      });
+    }
+
+    const { detectFileType } = require("../utils/file.upload");
+
+    const attachments = req.files.map((file) => {
+      const fileType = detectFileType(file.path);
+      const relativePath = file.path.replace(/\\/g, "/").replace("./", "/");
+      return {
+        url: relativePath,
+        fileType,
+        fileName: file.originalname,
+        fileSize: file.size,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Files uploaded successfully",
+      data: attachments,
+    });
+  } catch (error) {
+    console.error("uploadMedia error:", error);
+    return res.status(500).json({ success: false, message: "Upload failed" });
+  }
+};
+
 // Export generateRoomId so socket can use it too
 exports.generateRoomId = generateRoomId;

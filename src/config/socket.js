@@ -44,32 +44,36 @@ const setupSocket = (io) => {
 
     // ─────────────────────────────────────────
     // 📤 SEND MESSAGE
-    // Client emits: sendMessage with { chatRoomId, receiverId, message, image }
+    // Client emits: sendMessage with { chatRoomId, receiverId, message, mediaType, attachments }
     // ─────────────────────────────────────────
     socket.on("sendMessage", async (data) => {
       try {
-        const { chatRoomId, receiverId, message, image } = data;
+        const { chatRoomId, receiverId, message, image, mediaType, attachments } = data;
 
-        if (!chatRoomId || !receiverId || !message) {
+        if (!chatRoomId || !receiverId) {
           socket.emit("error", {
-            message: "chatRoomId, receiverId and message are required",
+            message: "chatRoomId and receiverId are required",
           });
           return;
         }
+
+        const msgContent = message || (mediaType ? `[${mediaType.toUpperCase()}]` : "");
 
         // Save message to DB
         const newMessage = await Message.create({
           chatRoomId,
           senderId: socket.user.id,
           receiverId,
-          message,
+          message: msgContent,
           image: image || null,
+          mediaType: mediaType || "text",
+          attachments: attachments || [],
         });
 
         // Update room's last message
         await ChatRoom.findOneAndUpdate(
           { chatRoomId },
-          { lastMessage: message, lastMessageAt: new Date() },
+          { lastMessage: msgContent, lastMessageAt: new Date() },
         );
 
         const populated = await newMessage.populate(

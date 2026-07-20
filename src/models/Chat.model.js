@@ -28,9 +28,28 @@ const messageSchema = new mongoose.Schema(
     },
 
     image: {
-      type: String,  // image URL (optional)
+      type: String, // image URL (optional)
       default: null,
     },
+
+    mediaType: {
+      type: String,
+      enum: ["text", "image", "pdf", "voice"],
+      default: "text",
+    },
+
+    attachments: [
+      {
+        url: { type: String, required: true },
+        fileType: {
+          type: String,
+          enum: ["image", "pdf", "voice"],
+          default: "image",
+        },
+        fileName: { type: String },
+        fileSize: { type: Number },
+      },
+    ],
 
     isRead: {
       type: Boolean,
