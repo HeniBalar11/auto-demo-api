@@ -1,10 +1,11 @@
 // controllers/chat.controller.js
+const mongoose = require("mongoose");
 const { Message, ChatRoom } = require("../models/Chat.model");
 
-// 🔑 Generate a consistent room ID from two user IDs
-// (same room no matter who calls it first)
-const generateRoomId = (userId1, userId2) => {
-  return [userId1.toString(), userId2.toString()].sort().join("_");
+// 🔑 Generate a consistent room ID from two user IDs & optional request ID
+const generateRoomId = (userId1, userId2, requestId) => {
+  const base = [userId1.toString(), userId2.toString()].sort().join("_");
+  return requestId ? `${base}_${requestId}` : base;
 };
 
 // ─────────────────────────────────────────────
@@ -25,7 +26,12 @@ exports.getOrCreateRoom = async (req, res) => {
       });
     }
 
-    const chatRoomId = generateRoomId(senderId, receiverId);
+    const validRequestId =
+      requestId && mongoose.Types.ObjectId.isValid(requestId)
+        ? requestId
+        : null;
+
+    const chatRoomId = generateRoomId(senderId, receiverId, validRequestId);
 
     // Find or create the room
     let room = await ChatRoom.findOne({ chatRoomId });
@@ -34,7 +40,7 @@ exports.getOrCreateRoom = async (req, res) => {
       room = await ChatRoom.create({
         chatRoomId,
         participants: [senderId, receiverId],
-        requestId: requestId || null,
+        requestId: validRequestId,
       });
     }
 
