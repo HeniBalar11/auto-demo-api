@@ -2,6 +2,17 @@
 const jwt = require("jsonwebtoken");
 const { Message, ChatRoom } = require("../models/Chat.model");
 
+const isParticipant = (room, userId) =>
+  room.participants.map((p) => p.toString()).includes(userId.toString());
+
+const leaveOtherChatRooms = (socket) => {
+  for (const room of socket.rooms) {
+    if (room !== socket.id && !room.startsWith("user_")) {
+      socket.leave(room);
+    }
+  }
+};
+
 const setupSocket = (io) => {
   // 🔒 Authenticate socket connection using JWT token
   io.use((socket, next) => {
@@ -23,23 +34,49 @@ const setupSocket = (io) => {
   io.on("connection", async (socket) => {
     console.log(`✅ Socket connected: ${socket.user.id}`);
 
-    // Auto-join all rooms so user gets live messages in inbox
-    try {
-      const rooms = await ChatRoom.find({ participants: socket.user.id });
-      rooms.forEach((room) => socket.join(room.chatRoomId));
-      console.log(`👤 User ${socket.user.id} joined ${rooms.length} room(s)`);
-    } catch (err) {
-      console.error("Auto-join rooms error:", err);
-    }
+    // Personal inbox room only — do NOT auto-join all chat rooms
+    // (that caused newMessage to arrive for every conversation at once)
+    socket.join(`user_${socket.user.id}`);
 
     // ─────────────────────────────────────────
-    // 📥 JOIN A CHAT ROOM (optional — for new rooms)
+    // 📥 JOIN A CHAT ROOM
     // Client emits: joinRoom with { chatRoomId }
+    // Call this when opening a specific chat screen
     // ─────────────────────────────────────────
-    socket.on("joinRoom", ({ chatRoomId }) => {
+    socket.on("joinRoom", async ({ chatRoomId }) => {
+      try {
+        if (!chatRoomId) return;
+
+        const room = await ChatRoom.findOne({ chatRoomId });
+        if (!room) {
+          socket.emit("error", { message: "Chat room not found" });
+          return;
+        }
+
+        if (!isParticipant(room, socket.user.id)) {
+          socket.emit("error", { message: "Not authorized for this room" });
+          return;
+        }
+
+        // Only stay in one chat room at a time
+        leaveOtherChatRooms(socket);
+        socket.join(chatRoomId);
+        console.log(`👤 User ${socket.user.id} joined room: ${chatRoomId}`);
+      } catch (err) {
+        console.error("joinRoom error:", err);
+        socket.emit("error", { message: "Failed to join room" });
+      }
+    });
+
+    // ─────────────────────────────────────────
+    // 📤 LEAVE A CHAT ROOM
+    // Client emits: leaveRoom with { chatRoomId }
+    // Call this when leaving a chat screen
+    // ─────────────────────────────────────────
+    socket.on("leaveRoom", ({ chatRoomId }) => {
       if (!chatRoomId) return;
-      socket.join(chatRoomId);
-      console.log(`👤 User ${socket.user.id} joined room: ${chatRoomId}`);
+      socket.leave(chatRoomId);
+      console.log(`👤 User ${socket.user.id} left room: ${chatRoomId}`);
     });
 
     // ─────────────────────────────────────────
@@ -54,6 +91,17 @@ const setupSocket = (io) => {
           socket.emit("error", {
             message: "chatRoomId and receiverId are required",
           });
+          return;
+        }
+
+        const room = await ChatRoom.findOne({ chatRoomId });
+        if (!room) {
+          socket.emit("error", { message: "Chat room not found" });
+          return;
+        }
+
+        if (!isParticipant(room, socket.user.id)) {
+          socket.emit("error", { message: "Not authorized for this room" });
           return;
         }
 
@@ -81,11 +129,20 @@ const setupSocket = (io) => {
           "name profileImage",
         );
 
-        // 📡 Broadcast to everyone in the room (including sender)
+        // 📡 Only sockets currently in THIS chatRoomId get the full message
         io.to(chatRoomId).emit("newMessage", {
           success: true,
           data: populated,
         });
+
+        // Inbox preview for both users (list screen), not thread dump
+        const chatUpdated = {
+          chatRoomId,
+          lastMessage: msgContent,
+          lastMessageAt: new Date(),
+        };
+        io.to(`user_${socket.user.id}`).emit("chatUpdated", chatUpdated);
+        io.to(`user_${receiverId}`).emit("chatUpdated", chatUpdated);
       } catch (error) {
         console.error("Socket sendMessage error:", error);
         socket.emit("error", { message: "Failed to send message" });
@@ -97,9 +154,11 @@ const setupSocket = (io) => {
     // Client emits: typing with { chatRoomId }
     // ─────────────────────────────────────────
     socket.on("typing", ({ chatRoomId }) => {
+      if (!chatRoomId) return;
       // Broadcast to others in the room (not the sender)
       socket.to(chatRoomId).emit("userTyping", {
         userId: socket.user.id,
+        chatRoomId,
       });
     });
 
@@ -108,8 +167,10 @@ const setupSocket = (io) => {
     // Client emits: stopTyping with { chatRoomId }
     // ─────────────────────────────────────────
     socket.on("stopTyping", ({ chatRoomId }) => {
+      if (!chatRoomId) return;
       socket.to(chatRoomId).emit("userStoppedTyping", {
         userId: socket.user.id,
+        chatRoomId,
       });
     });
 

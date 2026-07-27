@@ -143,6 +143,22 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
+    const room = await ChatRoom.findOne({ chatRoomId });
+    if (!room) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Chat room not found" });
+    }
+
+    const isParticipant = room.participants
+      .map((p) => p.toString())
+      .includes(senderId);
+    if (!isParticipant) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized" });
+    }
+
     // Handle optional image upload
     const image = req.files?.media?.length ? req.files.media[0].path : null;
 
@@ -167,10 +183,20 @@ exports.sendMessage = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
+      // Only clients in this chatRoomId receive the full message
       io.to(chatRoomId).emit("newMessage", {
         success: true,
         data: populated,
       });
+
+      // Inbox preview for both users
+      const chatUpdated = {
+        chatRoomId,
+        lastMessage: message,
+        lastMessageAt: new Date(),
+      };
+      io.to(`user_${senderId}`).emit("chatUpdated", chatUpdated);
+      io.to(`user_${receiverId}`).emit("chatUpdated", chatUpdated);
     }
 
     return res.status(200).json({
